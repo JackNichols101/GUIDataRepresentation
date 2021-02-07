@@ -1,4 +1,3 @@
-import json
 import requests
 import Secrets
 
@@ -17,7 +16,7 @@ def get_data():
         page_of_data = response.json()
         page_of_school_data = page_of_data['results']
         all_data.extend(page_of_school_data)
-        output_data(all_data)
+
     return all_data
 
 
@@ -29,7 +28,7 @@ def output_data(all_data):
 
 def main():
     demo_data = get_data()
-
+    output_data(demo_data)
 
 if __name__ == '__main__':
     main()
