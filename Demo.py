@@ -56,7 +56,7 @@ def check_db(check, cursor: sqlite3.Cursor):
 
 
 def setup_db(cursor: sqlite3.Cursor):
-    cursor.execute("DROP TABLE colleges")
+    cursor.execute("DROP TABLE IF EXISTS colleges")
     query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY,
     school_city TEXT, school_state TEXT, student_size_2018 INTEGER, student_size_2017
     INTEGER, earnings_3_yrs_after_completion_overall_count_over_poverty_line_2017
