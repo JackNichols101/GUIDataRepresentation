@@ -5,9 +5,9 @@ import Secrets
 import sqlite3
 
 
-def get_data():
+def get_data(num):
     all_data = []
-    for page in range(161):
+    for page in range(num):
         response = requests.get(
             f"https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=2,"
             f"3&fields=id,school.state,school.name,school.city,2018.student.size,2017.student.size,"
@@ -43,7 +43,20 @@ def close_db(connection: sqlite3.Connection):
     connection.close()
 
 
+def check_db(check, cursor: sqlite3.Cursor):
+    cursor.execute("SELECT * FROM colleges WHERE school_id = ?", (check,))
+    data = cursor.fetchone()
+    if data is None:
+        return 0
+    else:
+        return 1
+
+
+# def drop_db():
+
+
 def setup_db(cursor: sqlite3.Cursor):
+    cursor.execute("DROP TABLE colleges")
     query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY,
     school_city TEXT, school_state TEXT, student_size_2018 INTEGER, student_size_2017
     INTEGER, earnings_3_yrs_after_completion_overall_count_over_poverty_line_2017
@@ -52,7 +65,7 @@ def setup_db(cursor: sqlite3.Cursor):
 
 
 def main():
-    demo_data = get_data()
+    demo_data = get_data(161)
     connection, cursor = open_db('college_data.db')
     setup_db(cursor)
     fill_db(demo_data, cursor)
