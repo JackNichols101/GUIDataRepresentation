@@ -65,6 +65,7 @@ def setup_db(cursor: sqlite3.Cursor):
 
 
 def main():
+    # comment for workflow test
     demo_data = get_data(161)
     connection, cursor = open_db('college_data.db')
     setup_db(cursor)
