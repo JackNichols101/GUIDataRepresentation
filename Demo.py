@@ -61,6 +61,7 @@ def setup_db(cursor: sqlite3.Cursor):
     INTEGER, repayment_3_yr_repayment_overall_2016 INTEGER)"""
     cursor.execute(query1)
 
+
 def setup_xl():
     workbook = load_workbook(filename="C:\\Users\\jnrni\\PycharmProjects\\jNicholsSprint1\\state_M2019_dl.xlsx")
     sheet = workbook.active
