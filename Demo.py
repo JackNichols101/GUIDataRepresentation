@@ -53,9 +53,6 @@ def check_db(check, cursor: sqlite3.Cursor):
         return 1
 
 
-# def drop_db():
-
-
 def setup_db(cursor: sqlite3.Cursor):
     cursor.execute("DROP TABLE IF EXISTS colleges")
     query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY,
@@ -72,9 +69,7 @@ def setup_xl():
 
 
 def get_xl_data(sheet):
-    major_list = []
     state_data = []
-    m = 0
     max_row = sheet.max_row
     for i in range(1, max_row + 1):
         cell_obj = sheet.cell(row=i, column=10)
@@ -123,4 +118,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
