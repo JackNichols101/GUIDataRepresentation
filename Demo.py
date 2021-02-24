@@ -3,6 +3,7 @@ from typing import Tuple
 import requests
 import Secrets
 import sqlite3
+from openpyxl import load_workbook
 
 
 def get_data(num):
@@ -64,9 +65,58 @@ def setup_db(cursor: sqlite3.Cursor):
     cursor.execute(query1)
 
 
+def setup_xl():
+    workbook = load_workbook(filename="C:\\Users\\jnrni\\PycharmProjects\\jNicholsSprint1\\state_M2019_dl.xlsx")
+    sheet = workbook.active
+
+    return sheet
+
+
+def get_xl_data(sheet):
+    major_list = []
+    state_data = []
+    m = 0
+    max_row = sheet.max_row
+    for i in range(1, max_row + 1):
+        cell_obj = sheet.cell(row=i, column=10)
+        if cell_obj.value == "major":
+            state = sheet.cell(row=i, column=2)
+            title = sheet.cell(row=i, column=9)
+            total_em = sheet.cell(row=i, column=11)
+            hourly_25 = sheet.cell(row=i, column=19)
+            annually_25 = sheet.cell(row=i, column=24)
+            occ_code = sheet.cell(row=i, column=8)
+            state_data.append({'state': state.value,
+                               'occupation_title': title.value, 'total_employment': total_em.value,
+                               'hourly_25': hourly_25.value, 'annually_25': annually_25.value,
+                               'occupation_code': occ_code.value})
+
+    return state_data
+
+
+def setup_db_xl(cursor: sqlite3.Cursor):
+    cursor.execute("DROP TABLE IF EXISTS employment")
+    query1 = """CREATE TABLE IF NOT EXISTS employment(state TEXT,
+    occupation_title TEXT, total_employment INTEGER, hourly_25 INTEGER, annually_25
+    INTEGER, occupation_code TEXT)"""
+    cursor.execute(query1)
+
+
+def fill_db_xl(em_data, cursor: sqlite3.Cursor):
+    query2 = "INSERT INTO employment VALUES(?, ?, ?, ?, ?, ?)"
+    for item in em_data:
+        cursor.execute(query2, (item['state'], item['occupation_title'], item['total_employment'], item['hourly_25'],
+                                item['annually_25'],
+                                item['occupation_code']))
+
+
 def main():
-    demo_data = get_data(161)
+    demo_data = get_data(1)
     connection, cursor = open_db('college_data.db')
+    sheet = setup_xl()
+    state_data = get_xl_data(sheet)
+    setup_db_xl(cursor)
+    fill_db_xl(state_data, cursor)
     setup_db(cursor)
     fill_db(demo_data, cursor)
     close_db(connection)
