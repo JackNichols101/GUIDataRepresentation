@@ -44,15 +44,6 @@ def close_db(connection: sqlite3.Connection):
     connection.close()
 
 
-def check_db(check, cursor: sqlite3.Cursor):
-    cursor.execute("SELECT * FROM colleges WHERE school_id = ?", (check,))
-    data = cursor.fetchone()
-    if data is None:
-        return 0
-    else:
-        return 1
-
-
 def setup_db(cursor: sqlite3.Cursor):
     cursor.execute("DROP TABLE IF EXISTS colleges")
     query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY,
