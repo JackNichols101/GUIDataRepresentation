@@ -2,8 +2,8 @@ import Demo
 
 
 def test_get_data():
-    results = Demo.get_data(1)
-    assert len(results) > 10
+    results = Demo.get_data()
+    assert len(results) > 1000
 
 
 def test_fill_db():

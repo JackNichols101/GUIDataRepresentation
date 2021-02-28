@@ -6,8 +6,21 @@ import sqlite3
 from openpyxl import load_workbook
 
 
-def get_data(num):
+def get_data():
     all_data = []
+    response = requests.get(f"https://api.data.gov/ed/collegescorecard/v1/schools.json?"
+                            f"school.degrees_awarded.predominant=2,"
+                            f"3&fields=id,school.state,school.name,school.city,2018.student.size,2017.student.size,"
+                            f"2017.earnings.3_yrs_after_completion.overall_count_over_poverty_line,"
+                            f"2016.repayment.3_yr_repayment.overall&api_key={Secrets.api_key}")
+    first_page = response.json()
+    if response.status_code != 200:
+        print(F"Error Getting Data from API: {response.raw}")
+        return []
+    total_entries = first_page['metadata']['total']
+    entries_per_page = first_page['metadata']['per_page']
+    num = (total_entries // entries_per_page) + (total_entries % entries_per_page > 0)
+    print(num)
     for page in range(num):
         response = requests.get(
             f"https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=2,"
@@ -31,10 +44,10 @@ def open_db(filename: str) -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
 
 
 def fill_db(all_data, cursor: sqlite3.Cursor):
-    query2 = "INSERT INTO colleges VALUES(?, ?, ?, ?, ?, ?, ?)"
+    query2 = "INSERT INTO colleges VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
     for item in all_data:
-        cursor.execute(query2, (item['id'], item['school.city'], item['school.state'], item['2018.student.size'],
-                                item['2017.student.size'],
+        cursor.execute(query2, (item['id'], item['school.name'], item['school.city'], item['school.state'],
+                                item['2018.student.size'], item['2017.student.size'],
                                 item['2017.earnings.3_yrs_after_completion.overall_count_over_poverty_line'],
                                 item['2016.repayment.3_yr_repayment.overall']))
 
@@ -46,7 +59,7 @@ def close_db(connection: sqlite3.Connection):
 
 def setup_db(cursor: sqlite3.Cursor):
     cursor.execute("DROP TABLE IF EXISTS colleges")
-    query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY,
+    query1 = """CREATE TABLE IF NOT EXISTS colleges(school_id INTEGER PRIMARY KEY, school_name TEXT,
     school_city TEXT, school_state TEXT, student_size_2018 INTEGER, student_size_2017
     INTEGER, earnings_3_yrs_after_completion_overall_count_over_poverty_line_2017
     INTEGER, repayment_3_yr_repayment_overall_2016 INTEGER)"""
@@ -97,7 +110,7 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
 
 
 def main():
-    demo_data = get_data(1)
+    demo_data = get_data()
     connection, cursor = open_db('college_data.db')
     sheet = setup_xl("state_M2019_dl.xlsx")
     state_data = get_xl_data(sheet)
