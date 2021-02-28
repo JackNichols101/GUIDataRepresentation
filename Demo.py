@@ -53,8 +53,8 @@ def setup_db(cursor: sqlite3.Cursor):
     cursor.execute(query1)
 
 
-def setup_xl():
-    workbook = load_workbook(filename="C:\\Users\\jnrni\\PycharmProjects\\jNicholsSprint1\\state_M2019_dl.xlsx")
+def setup_xl(filename):
+    workbook = load_workbook(filename=filename)
     sheet = workbook.active
 
     return sheet
@@ -99,7 +99,7 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
 def main():
     demo_data = get_data(1)
     connection, cursor = open_db('college_data.db')
-    sheet = setup_xl()
+    sheet = setup_xl("state_M2019_dl.xlsx")
     state_data = get_xl_data(sheet)
     setup_db_xl(cursor)
     fill_db_xl(state_data, cursor)
