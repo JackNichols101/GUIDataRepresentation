@@ -20,7 +20,8 @@ def test_fill_db():
 
 
 def test_xlsx():
-    sheet = Demo.setup_xl()
+    workbook = Demo.load_workbook(filename="state_M2019_dl.xlsx")
+    sheet = workbook.active
     data = Demo.get_xl_data(sheet)
     state = data[0]['state']
     state_count = 0
