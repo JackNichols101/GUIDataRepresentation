@@ -1,5 +1,8 @@
 from typing import Tuple
-
+import PySide6.QtWidgets
+import sys
+import DemoWindow
+import numbers
 import requests
 import Secrets
 import sqlite3
@@ -20,7 +23,7 @@ def get_data():
     total_entries = first_page['metadata']['total']
     entries_per_page = first_page['metadata']['per_page']
     num = (total_entries // entries_per_page) + (total_entries % entries_per_page > 0)
-    for page in range(num):
+    for page in range(1):
         response = requests.get(
             f"https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=2,"
             f"3&fields=id,school.state,school.name,school.city,2018.student.size,2017.student.size,"
@@ -110,16 +113,53 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
                                 item['occupation_code']))
 
 
+def start_widget(data, sheet):
+    qt_app = PySide6.QtWidgets.QApplication(sys.argv)
+    my_window = DemoWindow.Comp490DemoWindow(data, sheet)
+    sys.exit(qt_app.exec_())
+
+
+def organize_data_for_widget(data):
+    count = 0
+    total = 0.0
+    state = data[0]['school.state']
+    data_set_one = [{}]
+    for i in range(len(data)):
+
+        if state == data[i]['school.state']:
+            print(state)
+            if data[i]['2016.repayment.repayment_cohort.3_year_declining_balance'] is not None:
+                count = count + 1
+                total = data[i]['2016.repayment.repayment_cohort.3_year_declining_balance'] + total
+                state = data[i]['school.state']
+        else:
+
+            print(count)
+            data_set_one.append({'state': data[i - 1], 'cohort': total / count})
+            count = 0
+            total = 0
+            state = data[i]['school.state']
+
+    return data_set_one
+
+
 def main():
     demo_data = get_data()
+    data = organize_data_for_widget(demo_data)
+    print(data)
+    """
+    # sheet = setup_xl("state_M2019_dl.xlsx")
+    # state_data = get_xl_data(sheet)
+    start_widget(demo_data, 'sheet')
+    
     connection, cursor = open_db('college_data.db')
-    sheet = setup_xl("state_M2019_dl.xlsx")
-    state_data = get_xl_data(sheet)
+    
     setup_db_xl(cursor)
     fill_db_xl(state_data, cursor)
     setup_db(cursor)
     fill_db(demo_data, cursor)
     close_db(connection)
+    """
 
 
 if __name__ == '__main__':
