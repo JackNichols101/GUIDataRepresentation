@@ -120,27 +120,14 @@ def start_widget(data, sheet):
 
 
 def organize_data_for_widget(data):
-    count = 0
-    total = 0.0
-    state = data[0]['school.state']
-    data_set_one = [{}]
-    for i in range(len(data)):
+    state_list = ['AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN',
+                  'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
+                  'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA',
+                  'VI', 'WA', 'WV', 'WV', 'WI', 'WY']
+    data_set = []
+    for item in data
 
-        if state == data[i]['school.state']:
-            print(state)
-            if data[i]['2016.repayment.repayment_cohort.3_year_declining_balance'] is not None:
-                count = count + 1
-                total = data[i]['2016.repayment.repayment_cohort.3_year_declining_balance'] + total
-                state = data[i]['school.state']
-        else:
-
-            print(count)
-            data_set_one.append({'state': data[i - 1], 'cohort': total / count})
-            count = 0
-            total = 0
-            state = data[i]['school.state']
-
-    return data_set_one
+    return data_set
 
 
 def main():
