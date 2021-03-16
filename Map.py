@@ -1,4 +1,6 @@
 import json
+
+import plotly
 import plotly.express as px
 import pandas as pd
 from urllib.request import urlopen
@@ -20,4 +22,8 @@ def get_map():
                                labels={'unemp': 'unemployment rate'}
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    fig.show()
+    html = '<html><body>'
+    html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
+    html += '</body></html>'
+
+    return html

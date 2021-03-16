@@ -1,8 +1,8 @@
 from typing import Tuple
-import PySide6.QtWidgets
+import PySide2.QtWidgets
 import sys
 import DemoWindow
-import numbers
+import us_state_abbrev
 import requests
 import Secrets
 import sqlite3
@@ -23,7 +23,7 @@ def get_data():
     total_entries = first_page['metadata']['total']
     entries_per_page = first_page['metadata']['per_page']
     num = (total_entries // entries_per_page) + (total_entries % entries_per_page > 0)
-    for page in range(1):
+    for page in range(num):
         response = requests.get(
             f"https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=2,"
             f"3&fields=id,school.state,school.name,school.city,2018.student.size,2017.student.size,"
@@ -49,11 +49,14 @@ def open_db(filename: str) -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
 def fill_db(all_data, cursor: sqlite3.Cursor):
     query2 = "INSERT INTO colleges VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
     for item in all_data:
-        cursor.execute(query2, (item['id'], item['school.name'], item['school.city'], item['school.state'],
-                                item['2018.student.size'], item['2017.student.size'],
-                                item['2017.earnings.3_yrs_after_completion.overall_count_over_poverty_line'],
-                                item['2016.repayment.repayment_cohort.3_year_declining_balance'],
-                                item['2016.repayment.3_yr_repayment.overall']))
+        if 'PW' != item['school.state'] and 'AS' != item['school.state'] and 'MH' != item['school.state'] \
+                and 'FM' != item['school.state'] and 'MP' != item['school.state']:
+            item['school.state'] = us_state_abbrev.abbrev_us_state[item['school.state']]
+            cursor.execute(query2, (item['id'], item['school.name'], item['school.city'], item['school.state'],
+                                    item['2018.student.size'], item['2017.student.size'],
+                                    item['2017.earnings.3_yrs_after_completion.overall_count_over_poverty_line'],
+                                    item['2016.repayment.repayment_cohort.3_year_declining_balance'],
+                                    item['2016.repayment.3_yr_repayment.overall']))
 
 
 def close_db(connection: sqlite3.Connection):
@@ -113,40 +116,46 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
                                 item['occupation_code']))
 
 
-def start_widget(data, sheet):
-    qt_app = PySide6.QtWidgets.QApplication(sys.argv)
-    my_window = DemoWindow.Comp490DemoWindow(data, sheet)
+def start_widget(data_1):
+    qt_app = PySide2.QtWidgets.QApplication(sys.argv)
+    my_window = DemoWindow.Comp490DemoWindow(data_1)
     sys.exit(qt_app.exec_())
 
 
-def organize_data_for_widget(data):
-    state_list = ['AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN',
-                  'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
-                  'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA',
-                  'VI', 'WA', 'WV', 'WV', 'WI', 'WY']
-    data_set = []
-    for item in data
+def organize_data_for_widget(cursor):
+    data = []
+    query1 = """SELECT school_state, SUM(student_size_2018) as tot, AVG(repayment_cohort_3_year_declining_balance_2016)
+    FROM colleges
+    GROUP BY school_state"""
+    query2 = """SELECT state, SUM(total_employment) as em, CAST(AVG(annually_25) AS Integer)
+    FROM employment
+    WHERE CAST(SUBSTR(occupation_code, 1, 2) AS integer) NOT BETWEEN 30 AND 50
+    GROUP BY state"""
+    cursor.execute(query1)
+    one = list(cursor.fetchall())
+    cursor.execute(query2)
+    two = list(cursor.fetchall())
+    for i in range(len(one)):
+        temp = [one[i][0], one[i][1], one[i][2], two[i][1], two[i][2]]
+        data.append(temp)
 
-    return data_set
+    return data
 
 
 def main():
-    demo_data = get_data()
-    data = organize_data_for_widget(demo_data)
-    print(data)
-    """
-    # sheet = setup_xl("state_M2019_dl.xlsx")
-    # state_data = get_xl_data(sheet)
-    start_widget(demo_data, 'sheet')
-    
+    #demo_data = get_data()
+    sheet = setup_xl("state_M2019_dl.xlsx")
     connection, cursor = open_db('college_data.db')
-    
+    state_data = get_xl_data(sheet)
     setup_db_xl(cursor)
     fill_db_xl(state_data, cursor)
-    setup_db(cursor)
-    fill_db(demo_data, cursor)
+
+    #setup_db(cursor)
+    #fill_db(demo_data, cursor)
+    data = organize_data_for_widget(cursor)
+
+    start_widget(data)
     close_db(connection)
-    """
 
 
 if __name__ == '__main__':
