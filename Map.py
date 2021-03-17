@@ -1,29 +1,43 @@
-import json
-
 import plotly
-import plotly.express as px
+import plotly.graph_objs as go
 import pandas as pd
-from urllib.request import urlopen
+from plotly import offline
+
+import us_state_abbrev
 
 
-def get_map():
-    with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
-        counties = json.load(response)
+def get_map(data, method):
+    data_vis = []
+    for item in data:
+        if len(item[0]) > 3:
+            temp_state = us_state_abbrev.us_state_abbrev[item[0]]
+        temp_val_one = item[3] / item[1]  # ratio of employee number / graduate number
+        temp_val_two = item[2] / item[4]  # ratio of balance / 25 lower salary
+        data_vis.append([temp_state, temp_val_one, temp_val_two])
+    data_frame = pd.DataFrame.from_records(data_vis, columns=['State', 'Graduate Size', 'Declining Balance'])
+    if method == 1:
+        visual = dict(
+            type='choropleth',
+            colorscale='Viridis',
+            locations=data_frame['State'],
+            locationmode="USA-states",
+            z=data_frame['Graduate Size'],
+            text=data_frame['State'],
+            colorbar=dict(title='Ratio of # Employees/# Grads')
+        )
+        layout = dict(title='Ratio # Employees / # College Graduates', geo=dict(projection={'type': 'mercator'}))
+    else:
+        visual = dict(
+            type='choropleth',
+            colorscale='Viridis',
+            locations=data_frame['State'],
+            locationmode="USA-states",
+            z=data_frame['Declining Balance'],
+            text=data_frame['State'],
+            colorbar=dict(title='Ratio of DB/25%Salary')
+        )
+        layout = dict(title='Ratio of Declining Balance / Lower 25% Salary', geo=dict(projection={'type': 'mercator'}))
+    choromap = go.Figure(data=[visual], layout=layout)
+    choromap.update_layout(margin={"r": 0, "t": 30, "l": 0, "b": 0})
 
-    df = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv",
-                     dtype={"fips": str})
-
-    fig = px.choropleth_mapbox(df, geojson=counties, locations='fips', color='unemp',
-                               color_continuous_scale="Viridis",
-                               range_color=(0, 12),
-                               mapbox_style="carto-positron",
-                               zoom=3, center={"lat": 37.0902, "lon": -95.7129},
-                               opacity=0.5,
-                               labels={'unemp': 'unemployment rate'}
-                               )
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    html = '<html><body>'
-    html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
-    html += '</body></html>'
-
-    return html
+    return choromap.to_html(include_plotlyjs='cdn')

@@ -1,13 +1,10 @@
-from operator import itemgetter
-
 from PyQt5.QtWidgets import qApp
-from PySide2.QtGui import QIcon, QFont, QColor
+from PySide2.QtGui import QFont, QColor
 from PySide2.QtWebEngineWidgets import QWebEngineView
-from PySide2.QtWidgets import QWidget, QPushButton, QListWidget, QApplication, QListWidgetItem, QInputDialog, \
-    QDesktopWidget, QAction, QMenu, QMainWindow, QVBoxLayout, QHBoxLayout, QSizePolicy
+from PySide2.QtWidgets import QListWidget, QListWidgetItem, QInputDialog, \
+    QDesktopWidget, QAction, QMenu, QMainWindow
 import Demo
 import Map
-
 
 
 class Comp490DemoWindow(QMainWindow):
@@ -45,8 +42,10 @@ class Comp490DemoWindow(QMainWindow):
         d_salary = QAction('Descending Lower 25 percent Salary', self)
         d_salary.triggered.connect(self.descending_salary)
 
-        graph = QAction('graph', self)
-        graph.triggered.connect(self.do_map())
+        graph = QAction('Choropleth Map', self)
+        graph.triggered.connect(self.do_map_method_one)
+        graph_two = QAction('Choropleth Map', self)
+        graph_two.triggered.connect(self.do_map_method_two)
 
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('&File')
@@ -62,10 +61,11 @@ class Comp490DemoWindow(QMainWindow):
         submenu.addAction(graph)
         submenu2.addAction(a_salary)
         submenu2.addAction(d_salary)
+        submenu2.addAction(graph_two)
 
         menu_bar.addMenu(submenu)
         menu_bar.addMenu(submenu2)
-        self.resize(640, 480)
+        self.resize(640, 500)
         self.center()
         self.setWindowTitle('Data GUI')
         self.show()
@@ -74,7 +74,34 @@ class Comp490DemoWindow(QMainWindow):
         text, ok = QInputDialog.getText(self, 'Input Dialog', 'Enter text:')
         if ok:
             print(text)
-            # self.sheet = Demo.setup_xl(text)
+            qApp.quit
+            sheet = Demo.setup_xl(text)
+            connection, cursor = Demo.open_db('college_data.db')
+            state_data = Demo.get_xl_data(sheet)
+            Demo.setup_db_xl(cursor)
+            Demo.fill_db_xl(state_data, cursor)
+
+            self.data_set = Demo.organize_data_for_widget(cursor)
+
+    def do_map_method_one(self):
+        method = 1
+        html = Map.get_map(self.data_set, method)
+        print(html)
+        plot_widget = QWebEngineView(self)
+        plot_widget.setHtml(html)
+        plot_widget.move(0, 20)
+        plot_widget.setMinimumSize(640, 480)
+        plot_widget.show()
+
+    def do_map_method_two(self):
+        method = 2
+        html = Map.get_map(self.data_set, method)
+        print(html)
+        plot_widget = QWebEngineView(self)
+        plot_widget.setHtml(html)
+        plot_widget.move(0, 20)
+        plot_widget.setMinimumSize(640, 480)
+        plot_widget.show()
 
     def ascending_grads(self):
         color = 0
@@ -82,7 +109,7 @@ class Comp490DemoWindow(QMainWindow):
         self.list_control = display_list
         display_list.move(0, 21)
         display_list.setFont(QFont('Courier', 10))
-        display_list.setMinimumSize(640, 459)
+        display_list.setMinimumSize(640, 479)
         self.data_set = sorted(self.data_set, key=lambda l: l[1])
         headers = ["State", "College Graduates", "Total Employment"]
         display_text = f"{headers[0].ljust(25)}{headers[1].ljust(25)}{headers[2]}"
@@ -101,7 +128,7 @@ class Comp490DemoWindow(QMainWindow):
         self.list_control = display_list
         display_list.move(0, 21)
         display_list.setFont(QFont('Courier', 10))
-        display_list.setMinimumSize(640, 459)
+        display_list.setMinimumSize(640, 479)
         self.data_set = sorted(self.data_set, key=lambda l: l[4])
         headers = ["State", "Lower 25% Salary", "Declining Balance %"]
         display_text = f"{headers[0].ljust(25)}{headers[1].ljust(25)}{headers[2]}"
@@ -120,7 +147,7 @@ class Comp490DemoWindow(QMainWindow):
         self.list_control = display_list
         display_list.move(0, 21)
         display_list.setFont(QFont('Courier', 10))
-        display_list.setMinimumSize(640, 459)
+        display_list.setMinimumSize(640, 479)
         self.data_set = sorted(self.data_set, key=lambda l: l[4], reverse=True)
         headers = ["State", "Lower 25% Salary", "Declining Balance %"]
         display_text = f"{headers[0].ljust(25)}{headers[1].ljust(25)}{headers[2]}"
@@ -139,7 +166,7 @@ class Comp490DemoWindow(QMainWindow):
         self.list_control = display_list
         display_list.move(0, 21)
         display_list.setFont(QFont('Courier', 10))
-        display_list.setMinimumSize(640, 459)
+        display_list.setMinimumSize(640, 479)
         self.data_set = sorted(self.data_set, key=lambda l: l[1], reverse=True)
         headers = ["State", "College Graduates", "Total Employment"]
         display_text = f"{headers[0].ljust(25)}{headers[1].ljust(25)}{headers[2]}"
@@ -152,10 +179,3 @@ class Comp490DemoWindow(QMainWindow):
             list_item.setBackground(QColor(0, 0, 0))
         display_list.show()
 
-    def do_map(self):
-        html = Map.get_map()
-
-        plot_widget = QWebEngineView(self)
-        plot_widget.setHtml(html)
-
-        plot_widget.show()

@@ -153,9 +153,9 @@ def main():
     #setup_db(cursor)
     #fill_db(demo_data, cursor)
     data = organize_data_for_widget(cursor)
-
-    start_widget(data)
     close_db(connection)
+    start_widget(data)
+
 
 
 if __name__ == '__main__':
