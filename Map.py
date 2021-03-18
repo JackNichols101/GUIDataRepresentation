@@ -1,7 +1,5 @@
 import plotly.graph_objs as go
 import pandas as pd
-
-
 from us_state_abbrev import us_state_abbrev
 
 

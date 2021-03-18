@@ -47,7 +47,7 @@ class Comp490DemoWindow(QMainWindow):
         file_menu.addAction(update_file)
         self.statusBar()
         submenu = QMenu('College Grads vs Total Employment', self)
-        submenu2 = QMenu('cohort Declining Balance vs Annually Salary', self)
+        submenu2 = QMenu('Cohort Declining Balance vs Annual Salary', self)
         submenu.addAction(a_num_grads)
         submenu.addAction(d_num_grads)
         submenu.addAction(graph)
@@ -65,18 +65,12 @@ class Comp490DemoWindow(QMainWindow):
         en = QInputDialog(self)
         en.resize(600, 120)
         text, ok = en.getText(self, 'Please Wait', 'Enter new file:')
-
         if ok:
             print(text)
-            sheet = Demo.setup_xl(text)
             connection, cursor = Demo.open_db('college_data.db')
-            state_data = Demo.get_xl_data(sheet)
-            Demo.setup_db_xl(cursor)
-            Demo.fill_db_xl(state_data, cursor)
-            self.data_set, self.html = Demo.organize_data_for_widget(cursor)
+            self.data_set, self.html = Demo.update_file(text, cursor)
 
     def do_map_method_one(self):
-        #print(self.html[0])
         plot_widget = QWebEngineView(self)
         plot_widget.setHtml(self.html[0])
         plot_widget.move(0, 20)
@@ -84,7 +78,6 @@ class Comp490DemoWindow(QMainWindow):
         plot_widget.show()
 
     def do_map_method_two(self):
-        #print(self.html[1])
         plot_widget = QWebEngineView(self)
         plot_widget.setHtml(self.html[1])
         plot_widget.move(0, 20)

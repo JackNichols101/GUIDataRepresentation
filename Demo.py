@@ -123,6 +123,17 @@ def start_widget(data, html):
     sys.exit(qt_app.exec_())
 
 
+def update_file(file, cursor):
+    sheet = setup_xl(file)
+    state_data = get_xl_data(sheet)
+    setup_db_xl(cursor)
+    fill_db_xl(state_data, cursor)
+    print(state_data)
+    data, html = organize_data_for_widget(cursor)
+    print(data)
+    return data, html
+
+
 def organize_data_for_widget(cursor):
     query1 = """SELECT school_state, SUM(student_size_2018) as tot, AVG(repayment_cohort_3_year_declining_balance_2016)
     FROM colleges
@@ -133,38 +144,38 @@ def organize_data_for_widget(cursor):
     GROUP BY state"""
     cursor.execute(query1)
     one = list(cursor.fetchall())
+    print(one)
     cursor.execute(query2)
     two = list(cursor.fetchall())
     data = {}
     for item in one:
         grad = item[1]
         grad = int(grad / 4)
-        data[us_state_abbrev.abbrev_us_state[item[0]]] = [grad, item[2]]
+        data[us_state_abbrev.abbrev_us_state[item[0]]] = [grad, item[2], 0, 0]
     for item in two:
         if item[0] in data:
-            data[item[0]].append(item[1])
-            data[item[0]].append(item[2])
+            data[item[0]][2] = item[1]  # data[item[0]].append(item[1])
+            data[item[0]][3] = item[2]  # data[item[0]].append(item[2])
     print(data)
     html_map = Map.convert(data)
     dat = []
     for key, value in data.items():
         it = [key, value[0], value[2], value[3], value[1]]
         dat.append(it)
+    print(dat)
     return dat, html_map
 
 
 def main():
-    # demo_data = get_data()
+    demo_data = get_data()
     sheet = setup_xl("state_M2019_dl.xlsx")
     connection, cursor = open_db('college_data.db')
     state_data = get_xl_data(sheet)
     setup_db_xl(cursor)
     fill_db_xl(state_data, cursor)
-
-    #setup_db(cursor)
-    #fill_db(demo_data, cursor)
+    setup_db(cursor)
+    fill_db(demo_data, cursor)
     data, html = organize_data_for_widget(cursor)
-    #print(data)
     close_db(connection)
     start_widget(data, html)
 
