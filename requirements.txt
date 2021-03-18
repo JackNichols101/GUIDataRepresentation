@@ -2,3 +2,5 @@ requests
 openpyxl
 pyside2
 pyQt5
+pandas
+plotly
