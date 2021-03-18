@@ -1,2 +1,4 @@
 requests
 openpyxl
+pyside2
+pyQt5
