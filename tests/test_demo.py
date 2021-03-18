@@ -1,3 +1,6 @@
+import pytest
+from pytestqt.plugin import qtbot
+
 import Demo
 
 

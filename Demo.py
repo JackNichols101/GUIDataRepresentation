@@ -8,6 +8,8 @@ import Secrets
 import sqlite3
 from openpyxl import load_workbook
 
+import Map
+
 
 def get_data():
     all_data = []
@@ -51,7 +53,6 @@ def fill_db(all_data, cursor: sqlite3.Cursor):
     for item in all_data:
         if 'PW' != item['school.state'] and 'AS' != item['school.state'] and 'MH' != item['school.state'] \
                 and 'FM' != item['school.state'] and 'MP' != item['school.state']:
-            item['school.state'] = us_state_abbrev.abbrev_us_state[item['school.state']]
             cursor.execute(query2, (item['id'], item['school.name'], item['school.city'], item['school.state'],
                                     item['2018.student.size'], item['2017.student.size'],
                                     item['2017.earnings.3_yrs_after_completion.overall_count_over_poverty_line'],
@@ -116,14 +117,13 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
                                 item['occupation_code']))
 
 
-def start_widget(data_1):
+def start_widget(data, html):
     qt_app = PySide2.QtWidgets.QApplication(sys.argv)
-    my_window = DemoWindow.Comp490DemoWindow(data_1)
+    my_window = DemoWindow.Comp490DemoWindow(data, html)
     sys.exit(qt_app.exec_())
 
 
 def organize_data_for_widget(cursor):
-    data = []
     query1 = """SELECT school_state, SUM(student_size_2018) as tot, AVG(repayment_cohort_3_year_declining_balance_2016)
     FROM colleges
     GROUP BY school_state"""
@@ -135,15 +135,26 @@ def organize_data_for_widget(cursor):
     one = list(cursor.fetchall())
     cursor.execute(query2)
     two = list(cursor.fetchall())
-    for i in range(len(one)):
-        temp = [one[i][0], one[i][1], one[i][2], two[i][1], two[i][2]]
-        data.append(temp)
-
-    return data
+    data = {}
+    for item in one:
+        grad = item[1]
+        grad = int(grad / 4)
+        data[us_state_abbrev.abbrev_us_state[item[0]]] = [grad, item[2]]
+    for item in two:
+        if item[0] in data:
+            data[item[0]].append(item[1])
+            data[item[0]].append(item[2])
+    print(data)
+    html_map = Map.convert(data)
+    dat = []
+    for key, value in data.items():
+        it = [key, value[0], value[2], value[3], value[1]]
+        dat.append(it)
+    return dat, html_map
 
 
 def main():
-    #demo_data = get_data()
+    # demo_data = get_data()
     sheet = setup_xl("state_M2019_dl.xlsx")
     connection, cursor = open_db('college_data.db')
     state_data = get_xl_data(sheet)
@@ -152,10 +163,10 @@ def main():
 
     #setup_db(cursor)
     #fill_db(demo_data, cursor)
-    data = organize_data_for_widget(cursor)
+    data, html = organize_data_for_widget(cursor)
+    #print(data)
     close_db(connection)
-    start_widget(data)
-
+    start_widget(data, html)
 
 
 if __name__ == '__main__':
