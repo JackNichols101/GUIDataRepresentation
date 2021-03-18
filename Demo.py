@@ -119,7 +119,7 @@ def fill_db_xl(em_data, cursor: sqlite3.Cursor):
 
 def start_widget(data, html):
     qt_app = PySide2.QtWidgets.QApplication(sys.argv)
-    window = DemoWindow.Comp490DemoWindow(data, html)
+    window = DemoWindow.Comp490DemoWindow(data, html)  # noqa: F841
     sys.exit(qt_app.exec_())
 
 

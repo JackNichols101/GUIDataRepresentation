@@ -159,4 +159,3 @@ class Comp490DemoWindow(QMainWindow):
             list_item.setForeground(QColor(4*color, 255 - 4*color, 0))
             list_item.setBackground(QColor(0, 0, 0))
         display_list.show()
-
