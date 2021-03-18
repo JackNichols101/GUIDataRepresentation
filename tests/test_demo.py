@@ -98,4 +98,3 @@ def test_update_file():
     Demo.fill_db(test_list, cursor)
     test_data, test_html = Demo.update_file('test.xlsx', cursor)
     assert test_data[1][2] == 29410
-
